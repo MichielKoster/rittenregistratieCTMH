@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>Rittenregistratie CTMH</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; }
+    
+    :root {
+      --bg: #F7F4F0;
+      --surface: #FDFBF8;
+      --ink: #8c6848;
+      --muted: #68749c;
+      --accent: #eb7e13;
+      --accentLight: #FEF3E7;
+      --border: #D9CECC;
+      --success: #7a98ad;
+      --successLight: #EAF1F5;
+      --brown: #8c6848;
+      --white: #FDFBF8;
+    }
+
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .app {
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      background: var(--bg);
+    }
+
+    header {
+      background: var(--brown);
+      color: var(--white);
+      padding: 14px 18px;
+      border-bottom: 3px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-year {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #D4BFA8;
+    }
+
+    .tab-bar {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 11px 4px 9px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .tab-btn.active {
+      border-bottom-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .panel {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 14px 28px;
+    }
+
+    .label {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"], input[type="date"], input[type="number"], input[type="month"], textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--ink);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="month"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      color: var(--accent);
+    }
+
+    textarea {
+      resize: none;
+      height: 64px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .form-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .form-row {
+      margin-bottom: 13px;
+    }
+
+    .form-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+    }
+
+    .label-row .label {
+      margin: 0;
+      flex: 1;
+    }
+
+    .use-home-btn {
+      font-size: 0.65rem;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Mono', monospace;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      padding: 0;
+      white-space: nowrap;
+    }
+
+    .use-home-btn:disabled {
+      color: var(--muted);
+      cursor: default;
+      text-decoration: none;
+    }
+
+    .btn-add {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-add:active {
+      background: #d97a0d;
+    }
+
+    .btn-sm {
+      padding: 9px 14px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .btn-sm:active {
+      background: #d97a0d;
+    }
+
+    .km-preview {
+      background: var(--accentLight);
+      border: 1px solid #F5C98A;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .km-num {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .retour-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+      margin: 10px 0;
+    }
+
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .retour-row label {
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 14px 11px;
+    }
+
+    .stat-box.wide {
+      grid-column: span 2;
+    }
+
+    .stat-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .stat-value {
+      font-family: 'Fraunces', serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-unit {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-left: 2px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .filter-row input {
+      flex: 1;
+    }
+
+    .filter-row input[type="month"] {
+      max-width: 145px;
+      flex-shrink: 0;
+    }
+
+    .export-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .export-btn {
+      padding: 9px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .export-btn:active {
+      background: var(--bg);
+    }
+
+    .rit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rit-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .rit-datum {
+      font-size: 0.66rem;
+      color: var(--muted);
+    }
+
+    .rit-route {
+      font-size: 0.82rem;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .rit-km {
+      font-family: 'Fraunces', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-align: right;
+    }
+
+    .rit-km-unit {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .rit-info {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .retour-badge {
+      font-size: 0.58rem;
+      background: var(--successLight);
+      color: var(--success);
+      border-radius: 20px;
+      padding: 2px 7px;
+      border: 1px solid #B5CFDC;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: var(--border);
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-left: auto;
+      padding: 0 2px;
+    }
+
+    .rit-card > div:first-child {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      opacity: 0.3;
+    }
+
+    .empty-state p {
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+
+    .home-card {
+      background: var(--brown);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hc-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #D4BFA8;
+      margin-bottom: 4px;
+    }
+
+    .hc-value {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: white;
+      min-height: 26px;
+    }
+
+    .hc-value.empty {
+      font-size: 0.9rem;
+      color: #C9B49A;
+      font-style: italic;
+    }
+
+    .home-edit-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .home-input {
+      flex: 1;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: white;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .home-input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+
+    .section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+      margin-top: 16px;
+    }
+
+    .section-label:first-child {
+      margin-top: 0;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--brown);
+      color: white;
+      padding: 11px 22px;
+      border-radius: 24px;
+      font-size: 0.82rem;
+      border: 2px solid var(--accent);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 200;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    .home-card::before {
+      content: '⌂';
+      position: absolute;
+      right: 14px;
+      top: 10px;
+      font-size: 2rem;
+      opacity: 0.12;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #c0392b;
+    }
+
+    .btn-danger:active {
+      background: #a93226;
+    }
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="number"]:focus,
+    input[type="month"]:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      background-color: white;
+    }
+
+    .home-input:focus {
+      border-color: rgba(255,255,255,0.5);
+      background-color: rgba(255,255,255,0.2);
+    }
+
+    /* Hide tab content by default */
+    [data-tab] { display: none; }
+    [data-tab].active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header>
+      <div class="header-title"><span>🚗</span> Rittenregistratie</div>
+      <div class="header-year" id="year"></div>
+    </header>
+
+    <!-- Tab bar -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('invoer')">＋ Nieuwe rit</button>
+      <button class="tab-btn" onclick="switchTab('overzicht')">📋 Overzicht</button>
+      <button class="tab-btn" onclick="switchTab('instellingen')">⚙ Instellingen</button>
+    </nav>
+
+    <!-- INVOER TAB -->
+    <div data-tab="invoer" class="panel active">
+      <div class="form-block">
+        <div class="form-row">
+          <label class="label">Datum</label>
+          <input type="date" id="datum" />
+        </div>
+        <div class="form-row">
+          <div class="label-row">
+            <label class="label">Vertrek postcode</label>
+            <button class="use-home-btn" id="btnVanThuis" onclick="useThuisVan()">← thuis</button>
+          </div>
+          <input type="text" id="van" placeholder="1234 AB" maxlength="7" onchange="formatInput(this)" oninput="berekenKm()" />
+        </div>
+        <div class="form-row">
+          <div class="label-row">
+            <label class="label">Aankomst postcode</label>
+            <button class="use-home-btn" id="btnNaarThuis" onclick="useThuisNaar()">← thuis</button>
+          </div>
+          <input type="text" id="naar" placeholder="5678 CD" maxlength="7" onchange="formatInput(this)" oninput="berekenKm()" />
+        </div>
+        <div class="retour-row">
+          <input type="checkbox" id="retour" onchange="berekenKm()" />
+          <label for="retour">Retour (heen + terug)</label>
+        </div>
+        <div class="form-row" style="margin-top: 10px;">
+          <label class="label">Berekende afstand</label>
+          <div class="km-preview" id="kmPreview">Vul postcodes in…</div>
+        </div>
+      </div>
+
+      <div class="form-block">
+        <div class="form-row">
+          <label class="label">Bestemming (naam)</label>
+          <input type="text" id="bestemming" placeholder="Bijv. Klant Rotterdam" />
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label class="label">Doel / opmerking</label>
+          <textarea id="opmerking" placeholder="Bijv. Klantbezoek, vergadering…"></textarea>
+        </div>
+      </div>
+
+      <button class="btn-add" onclick="voegRitToe()">+ Rit toevoegen</button>
+    </div>
+
+    <!-- OVERZICHT TAB -->
+    <div data-tab="overzicht" class="panel">
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Totaal km</div>
+          <div><span class="stat-value" id="totaalKm">0</span><span class="stat-unit">km</span></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Ritten</div>
+          <div><span class="stat-value" id="aantalRitten">0</span></div>
+        </div>
+        <div class="stat-box wide">
+          <div class="stat-label" id="tarieflabel">Vergoeding (€ 0.23 / km)</div>
+          <div><span class="stat-value">€ <span id="totaalVergoeding">0.00</span></span></div>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <input type="text" id="filterText" placeholder="Zoek…" onkeyup="filterRitten()" />
+        <input type="month" id="filterMaand" onchange="filterRitten()" />
+      </div>
+
+      <div class="export-row">
+        <button class="export-btn" onclick="exportCSV()">↓ Exporteer CSV</button>
+      </div>
+
+      <div id="rittenContainer"></div>
+    </div>
+
+    <!-- INSTELLINGEN TAB -->
+    <div data-tab="instellingen" class="panel">
+      <div class="section-label">Thuisadres</div>
+      <div class="home-card">
+        <div class="hc-label">Standaard vertrekpunt</div>
+        <div class="hc-value" id="thuisDisplay">Nog niet ingesteld</div>
+        <div class="home-edit-row">
+          <input type="text" class="home-input" id="thuisInput" placeholder="1234 AB" maxlength="7" />
+          <button class="btn-sm" onclick="saveThuis()">Opslaan</button>
+        </div>
+      </div>
+
+      <div class="section-label">Vergoeding per km</div>
+      <div class="form-block" style="margin-bottom: 20px;">
+        <div class="form-row">
+          <label class="label">Tarief (€ per km)</label>
+          <input type="text" id="tariefInput" placeholder="0.23" inputmode="decimal" />
+        </div>
+        <button class="btn-add" onclick="saveTarief()">Opslaan</button>
+      </div>
+
+      <div class="section-label">Gegevens</div>
+      <div class="form-block">
+        <p style="font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6;">
+          Alle ritten worden lokaal opgeslagen op dit apparaat. Exporteer regelmatig als CSV voor je administratie.
+        </p>
+        <button class="btn-add btn-danger" onclick="wisAlleRitten()">🗑 Alle ritten wissen</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+    // ─────────────────────────────────────────────────────────────
+    // CONSTANTS & UTILITIES
+    // ─────────────────────────────────────────────────────────────
+    const COLORS = {
+      muted: '#68749c',
+      accent: '#eb7e13',
+      success: '#7a98ad',
+    };
+
+    function load(k, def) {
+      try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; }
+    }
+
+    function save(k, v) {
+      try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
+    }
+
+    function cleanPC(pc) {
+      return pc.replace(/\s/g, '').toUpperCase();
+    }
+
+    function validPC(pc) {
+      return /^[0-9]{4}[A-Z]{2}$/.test(cleanPC(pc));
+    }
+
+    function formatPC(pc) {
+      const c = cleanPC(pc);
+      return c.slice(0, 4) + ' ' + c.slice(4);
+    }
+
+    function formatDatum(d) {
+      const [y, m, day] = d.split('-');
+      return `${day}-${m}-${y}`;
+    }
+
+    function vandaag() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function haversine(a, b) {
+      const R = 6371;
+      const dL = (b.lat - a.lat) * Math.PI / 180;
+      const dO = (b.lon - a.lon) * Math.PI / 180;
+      const x = Math.sin(dL / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dO / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CACHE & POSTCODES.IO
+    // ─────────────────────────────────────────────────────────────
+    let _cache = load('kmCache', {});
+
+    async function getLatLon(postcode) {
+      const pc = cleanPC(postcode);
+      const key = 'll_' + pc;
+      if (_cache[key]) return _cache[key];
+      try {
+        const r = await fetch(`https://api.postcodes.io/postcodes/${pc}`);
+        const d = await r.json();
+        if (d.status !== 200) return null;
+        const res = { lat: d.result.latitude, lon: d.result.longitude };
+        _cache[key] = res;
+        save('kmCache', _cache);
+        return res;
+      } catch { return null; }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TOAST
+    // ─────────────────────────────────────────────────────────────
+    let toastTimeout;
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => el.classList.remove('show'), 2800);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // STATE
+    // ─────────────────────────────────────────────────────────────
+    let ritten = load('ritten', []);
+    let thuis = load('thuisPostcode', '');
+    let tarief = load('tarief', 0.23);
+
+    let kmBerekenTimer;
+    let kmInfo = null;
+    let berekendeKm = 0;
+
+    // ─────────────────────────────────────────────────────────────
+    // TAB SWITCHING
+    // ─────────────────────────────────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll('[data-tab]').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      if (name === 'overzicht') updateOverzicht();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // FORM INPUT
+    // ─────────────────────────────────────────────────────────────
+    function formatInput(el) {
+      let s = el.value.replace(/\s/g, '').toUpperCase();
+      if (s.length > 4) s = s.slice(0, 4) + ' ' + s.slice(4);
+      el.value = s.slice(0, 7);
+      berekenKm();
+    }
+
+    async function berekenKm() {
+      const van = document.getElementById('van').value;
+      const naar = document.getElementById('naar').value;
+      const retour = document.getElementById('retour').checked;
+      const preview = document.getElementById('kmPreview');
+
+      clearTimeout(kmBerekenTimer);
+
+      if (!validPC(van) || !validPC(naar)) {
+        kmInfo = null;
+        berekendeKm = 0;
+        preview.innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">Vul postcodes in…</span>`;
+        return;
+      }
+
+      if (cleanPC(van) === cleanPC(naar)) {
+        kmInfo = { zelfde: true };
+        berekendeKm = 0;
+        preview.innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">Zelfde postcode</span>`;
+        return;
+      }
+
+      kmInfo = { bezig: true };
+      preview.innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">● Berekenen…</span>`;
+
+      kmBerekenTimer = setTimeout(async () => {
+        const [a, b] = await Promise.all([getLatLon(van), getLatLon(naar)]);
+        if (!a || !b) {
+          kmInfo = { fout: true };
+          berekendeKm = 0;
+          preview.innerHTML = `<span style="color: ${COLORS.accent};">Postcode niet gevonden</span>`;
+          return;
+        }
+        const enkeling = Math.round(haversine(a, b));
+        const km = retour ? enkeling * 2 : enkeling;
+        kmInfo = { km, enkeling, retour };
+        berekendeKm = km;
+        let html = `<span class="km-num">${km}</span> <span>km</span>`;
+        if (retour) html += ` <span style="font-size: 0.68rem; color: ${COLORS.success};">(${enkeling} × 2)</span>`;
+        preview.innerHTML = html;
+      }, 450);
+    }
+
+    async function voegRitToe() {
+      const datum = document.getElementById('datum').value;
+      const van = document.getElementById('van').value;
+      const naar = document.getElementById('naar').value;
+      const retour = document.getElementById('retour').checked;
+
+      if (!datum) { showToast('Selecteer een datum'); return; }
+      if (!validPC(van)) { showToast('Ongeldige vertrek postcode'); return; }
+      if (!validPC(naar)) { showToast('Ongeldige aankomst postcode'); return; }
+
+      let km = berekendeKm;
+      if (!km) {
+        const [a, b] = await Promise.all([getLatLon(van), getLatLon(naar)]);
+        if (!a || !b) { showToast('Kon afstand niet berekenen'); return; }
+        const e = Math.round(haversine(a, b));
+        km = retour ? e * 2 : e;
+      }
+
+      const bestemming = document.getElementById('bestemming').value;
+      const opmerking = document.getElementById('opmerking').value;
+
+      const nieuw = {
+        id: Date.now(),
+        datum,
+        van: cleanPC(van),
+        naar: cleanPC(naar),
+        bestemming,
+        opmerking,
+        retour,
+        km,
+      };
+
+      ritten.unshift(nieuw);
+      save('ritten', ritten);
+
+      document.getElementById('naar').value = '';
+      document.getElementById('bestemming').value = '';
+      document.getElementById('opmerking').value = '';
+      document.getElementById('retour').checked = false;
+      document.getElementById('datum').value = vandaag();
+      document.getElementById('van').value = '';
+      kmInfo = null;
+      berekendeKm = 0;
+      document.getElementById('kmPreview').innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">Vul postcodes in…</span>`;
+
+      showToast('Rit toegevoegd ✓');
+    }
+
+    function verwijderRit(id) {
+      if (!confirm('Rit verwijderen?')) return;
+      ritten = ritten.filter(r => r.id !== id);
+      save('ritten', ritten);
+      updateOverzicht();
+      showToast('Rit verwijderd');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // THUIS & TARIEF
+    // ─────────────────────────────────────────────────────────────
+    function useThuisVan() {
+      if (thuis) document.getElementById('van').value = formatPC(thuis);
+      berekenKm();
+    }
+
+    function useThuisNaar() {
+      if (thuis) document.getElementById('naar').value = formatPC(thuis);
+      berekenKm();
+    }
+
+    function saveThuis() {
+      const val = document.getElementById('thuisInput').value;
+      if (!validPC(val)) { showToast('Voer een geldige postcode in'); return; }
+      thuis = cleanPC(val);
+      save('thuisPostcode', thuis);
+      document.getElementById('thuisInput').value = '';
+      updateInstellingen();
+      showToast('Thuisadres opgeslagen ✓');
+    }
+
+    function saveTarief() {
+      const val = document.getElementById('tariefInput').value.replace(',', '.');
+      const t = parseFloat(val);
+      if (isNaN(t) || t <= 0) { showToast('Voer een geldig tarief in'); return; }
+      tarief = t;
+      save('tarief', tarief);
+      showToast('Tarief opgeslagen ✓');
+      updateOverzicht();
+    }
+
+    function updateInstellingen() {
+      const display = document.getElementById('thuisDisplay');
+      if (thuis) {
+        display.textContent = formatPC(thuis);
+        display.classList.remove('empty');
+      } else {
+        display.textContent = 'Nog niet ingesteld';
+        display.classList.add('empty');
+      }
+      document.getElementById('btnVanThuis').disabled = !thuis;
+      document.getElementById('btnNaarThuis').disabled = !thuis;
+      document.getElementById('tariefInput').value = String(tarief).replace('.', ',');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // OVERZICHT
+    // ─────────────────────────────────────────────────────────────
+    function updateOverzicht() {
+      const totaalKm = ritten.reduce((s, r) => s + r.km, 0);
+      document.getElementById('totaalKm').textContent = totaalKm;
+      document.getElementById('aantalRitten').textContent = ritten.length;
+      document.getElementById('totaalVergoeding').textContent = (totaalKm * tarief).toFixed(2).replace('.', ',');
+      document.getElementById('tarieflabel').textContent = `Vergoeding (€ ${String(tarief).replace('.', ',')} / km)`;
+      filterRitten();
+    }
+
+    function filterRitten() {
+      const filterText = document.getElementById('filterText').value.toLowerCase();
+      const filterMaand = document.getElementById('filterMaand').value;
+
+      const gefilterd = ritten.filter(r => {
+        const t = (r.bestemming + r.opmerking + r.van + r.naar).toLowerCase();
+        return t.includes(filterText) && (!filterMaand || r.datum.startsWith(filterMaand));
+      });
+
+      const container = document.getElementById('rittenContainer');
+      if (gefilterd.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🚗</div>
+            <p>Nog geen ritten.<br />Voeg je eerste rit toe via "Nieuwe rit".</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `<div class="rit-list">${gefilterd.map(r => `
+        <div class="rit-card">
+          <div>
+            <div>
+              <div class="rit-datum">${formatDatum(r.datum)}</div>
+              <div class="rit-route">${formatPC(r.van)} → ${formatPC(r.naar)}</div>
+            </div>
+            <div style="text-align: right;">
+              <span class="rit-km">${r.km}</span>
+              <span class="rit-km-unit"> km</span>
+            </div>
+          </div>
+          <div class="rit-info">
+            ${r.bestemming ? `<span>${r.bestemming}</span>` : ''}
+            ${r.opmerking ? `<span style="opacity: 0.75;">${r.opmerking}</span>` : ''}
+            ${r.retour ? `<span class="retour-badge">retour</span>` : ''}
+            <button class="del-btn" onclick="verwijderRit(${r.id})">✕</button>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function exportCSV() {
+      if (!ritten.length) { showToast('Geen ritten om te exporteren'); return; }
+      const hdr = ['Datum', 'Van', 'Naar', 'Bestemming', 'Opmerking', 'Retour', 'Kilometers'];
+      const rows = ritten.map(r => [r.datum, formatPC(r.van), formatPC(r.naar), r.bestemming, r.opmerking, r.retour ? 'Ja' : 'Nee', r.km].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(';'));
+      const csv = [hdr.join(';'), ...rows].join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ritten_${vandaag()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV geëxporteerd ✓');
+    }
+
+    function wisAlleRitten() {
+      if (!confirm('Weet je zeker dat je ALLE ritten wilt wissen?')) return;
+      ritten = [];
+      save('ritten', ritten);
+      updateOverzicht();
+      showToast('Alle ritten gewist');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // INIT
+    // ─────────────────────────────────────────────────────────────
+    window.addEventListener('load', () => {
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('datum').value = vandaag();
+      updateInstellingen();
+      updateOverzicht();
+    });
+  </script>
+</body>
+</html>
