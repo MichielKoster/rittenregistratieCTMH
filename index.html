@@ -1,1035 +1,570 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <title>Rittenregistratie CTMH</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,600&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; }
-    
-    :root {
-      --bg: #F7F4F0;
-      --surface: #FDFBF8;
-      --ink: #8c6848;
-      --muted: #68749c;
-      --accent: #eb7e13;
-      --accentLight: #FEF3E7;
-      --border: #D9CECC;
-      --success: #7a98ad;
-      --successLight: #EAF1F5;
-      --brown: #8c6848;
-      --white: #FDFBF8;
-    }
-
-    body {
-      font-family: 'DM Mono', monospace;
-      background: var(--bg);
-      color: var(--ink);
-      -webkit-font-smoothing: antialiased;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    .app {
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      max-width: 480px;
-      margin: 0 auto;
-      position: relative;
-      background: var(--bg);
-    }
-
-    header {
-      background: var(--brown);
-      color: var(--white);
-      padding: 14px 18px;
-      border-bottom: 3px solid var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-    }
-
-    .header-title {
-      font-family: 'Fraunces', serif;
-      font-size: 1.2rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .header-year {
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #D4BFA8;
-    }
-
-    .tab-bar {
-      display: flex;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 11px 4px 9px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.04em;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
-      color: var(--muted);
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
-    }
-
-    .tab-btn.active {
-      border-bottom-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .panel {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 16px 14px 28px;
-    }
-
-    .label {
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    input[type="text"], input[type="date"], input[type="number"], input[type="month"], textarea {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: var(--ink);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.9rem;
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    input[type="date"]::-webkit-calendar-picker-indicator,
-    input[type="month"]::-webkit-calendar-picker-indicator {
-      cursor: pointer;
-      color: var(--accent);
-    }
-
-    textarea {
-      resize: none;
-      height: 64px;
-      font-family: 'DM Mono', monospace;
-    }
-
-    .form-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 14px;
-    }
-
-    .form-row {
-      margin-bottom: 13px;
-    }
-
-    .form-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .label-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 5px;
-    }
-
-    .label-row .label {
-      margin: 0;
-      flex: 1;
-    }
-
-    .use-home-btn {
-      font-size: 0.65rem;
-      color: var(--accent);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: 'DM Mono', monospace;
-      text-decoration: underline;
-      text-decoration-style: dotted;
-      padding: 0;
-      white-space: nowrap;
-    }
-
-    .use-home-btn:disabled {
-      color: var(--muted);
-      cursor: default;
-      text-decoration: none;
-    }
-
-    .btn-add {
-      width: 100%;
-      padding: 14px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-add:active {
-      background: #d97a0d;
-    }
-
-    .btn-sm {
-      padding: 9px 14px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.8rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
-    .btn-sm:active {
-      background: #d97a0d;
-    }
-
-    .km-preview {
-      background: var(--accentLight);
-      border: 1px solid #F5C98A;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 0.85rem;
-      color: var(--accent);
-      min-height: 42px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .km-num {
-      font-family: 'Fraunces', serif;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .retour-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 4px 0;
-      margin: 10px 0;
-    }
-
-    input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--accent);
-      cursor: pointer;
-    }
-
-    .retour-row label {
-      font-size: 0.85rem;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .stat-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 13px 14px 11px;
-    }
-
-    .stat-box.wide {
-      grid-column: span 2;
-    }
-
-    .stat-label {
-      font-size: 0.58rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 3px;
-    }
-
-    .stat-value {
-      font-family: 'Fraunces', serif;
-      font-size: 1.6rem;
-      font-weight: 600;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    .stat-unit {
-      font-size: 0.72rem;
-      color: var(--muted);
-      margin-left: 2px;
-    }
-
-    .filter-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-
-    .filter-row input {
-      flex: 1;
-    }
-
-    .filter-row input[type="month"] {
-      max-width: 145px;
-      flex-shrink: 0;
-    }
-
-    .export-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 12px;
-    }
-
-    .export-btn {
-      padding: 9px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--ink);
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .export-btn:active {
-      background: var(--bg);
-    }
-
-    .rit-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .rit-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-    }
-
-    .rit-datum {
-      font-size: 0.66rem;
-      color: var(--muted);
-    }
-
-    .rit-route {
-      font-size: 0.82rem;
-      font-weight: 500;
-      margin-top: 2px;
-    }
-
-    .rit-km {
-      font-family: 'Fraunces', serif;
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: var(--accent);
-      text-align: right;
-    }
-
-    .rit-km-unit {
-      font-size: 0.68rem;
-      color: var(--muted);
-      font-family: 'DM Mono', monospace;
-    }
-
-    .rit-info {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-top: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .retour-badge {
-      font-size: 0.58rem;
-      background: var(--successLight);
-      color: var(--success);
-      border-radius: 20px;
-      padding: 2px 7px;
-      border: 1px solid #B5CFDC;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .del-btn {
-      background: none;
-      border: none;
-      color: var(--border);
-      font-size: 0.9rem;
-      cursor: pointer;
-      margin-left: auto;
-      padding: 0 2px;
-    }
-
-    .rit-card > div:first-child {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 48px 20px;
-      color: var(--muted);
-    }
-
-    .empty-state-icon {
-      font-size: 3rem;
-      margin-bottom: 10px;
-      opacity: 0.3;
-    }
-
-    .empty-state p {
-      font-size: 0.82rem;
-      line-height: 1.6;
-    }
-
-    .home-card {
-      background: var(--brown);
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin-bottom: 18px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hc-label {
-      font-size: 0.6rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #D4BFA8;
-      margin-bottom: 4px;
-    }
-
-    .hc-value {
-      font-family: 'Fraunces', serif;
-      font-size: 1.1rem;
-      font-weight: 300;
-      color: white;
-      min-height: 26px;
-    }
-
-    .hc-value.empty {
-      font-size: 0.9rem;
-      color: #C9B49A;
-      font-style: italic;
-    }
-
-    .home-edit-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .home-input {
-      flex: 1;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.22);
-      border-radius: 8px;
-      padding: 9px 12px;
-      color: white;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.9rem;
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-
-    .home-input::placeholder {
-      color: rgba(255,255,255,0.5);
-    }
-
-    .section-label {
-      font-size: 0.6rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-      margin-top: 16px;
-    }
-
-    .section-label:first-child {
-      margin-top: 0;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--brown);
-      color: white;
-      padding: 11px 22px;
-      border-radius: 24px;
-      font-size: 0.82rem;
-      border: 2px solid var(--accent);
-      opacity: 0;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      z-index: 200;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    .tab { display: none; }
-    .tab.active { display: block; }
-
-    .home-card::before {
-      content: '⌂';
-      position: absolute;
-      right: 14px;
-      top: 10px;
-      font-size: 2rem;
-      opacity: 0.12;
-      color: white;
-    }
-
-    .btn-danger {
-      background: #c0392b;
-    }
-
-    .btn-danger:active {
-      background: #a93226;
-    }
-
-    input[type="text"]:focus,
-    input[type="date"]:focus,
-    input[type="number"]:focus,
-    input[type="month"]:focus,
-    textarea:focus {
-      border-color: var(--accent);
-      background-color: white;
-    }
-
-    .home-input:focus {
-      border-color: rgba(255,255,255,0.5);
-      background-color: rgba(255,255,255,0.2);
-    }
-
-    /* Hide tab content by default */
-    [data-tab] { display: none; }
-    [data-tab].active { display: block; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ritten">
+<meta name="theme-color" content="#8c6848">
+<title>Rittenregistratie</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F7F4F0; --surface:#FDFBF8; --ink:#8c6848; --muted:#68749c;
+  --accent:#eb7e13; --al:#FEF3E7; --border:#D9CECC;
+  --success:#7a98ad; --sl:#EAF1F5; --brown:#8c6848;
+  --sb: env(safe-area-inset-bottom,0px); --st: env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--ink);
+  display:flex;flex-direction:column;height:100dvh;overflow:hidden;max-width:480px;margin:0 auto}
+/* Header */
+.hdr{background:var(--brown);color:#FDFBF8;
+  padding:calc(var(--st) + 14px) 18px 14px;
+  border-bottom:3px solid var(--accent);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hdr h1{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.hdr-sub{font-size:0.6rem;letter-spacing:.1em;text-transform:uppercase;color:#D4BFA8}
+/* Tabs */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:11px 4px 9px;font-family:'DM Mono',monospace;font-size:0.68rem;
+  letter-spacing:.04em;background:none;border:none;border-bottom:3px solid transparent;
+  color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+/* Panels */
+.panel{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:16px 14px calc(var(--sb) + 28px)}
+.panel.on{display:block}
+/* Form elements */
+.block{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+.row{margin-bottom:13px}
+.lbl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+.lrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+input[type=text],input[type=date],input[type=month],textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;color:var(--ink);font-family:'DM Mono',monospace;font-size:.9rem;
+  outline:none;-webkit-appearance:none;box-sizing:border-box}
+input:focus,textarea:focus{border-color:var(--accent);background:#fff}
+textarea{resize:none;height:64px}
+.inp-hi{background:var(--al)!important}
+/* Buttons */
+.btn-main{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'DM Mono',monospace;font-size:.9rem;cursor:pointer;margin-top:2px}
+.btn-sm{padding:9px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;
+  font-family:'DM Mono',monospace;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.btn-ghost{font-size:.65rem;color:var(--accent);background:none;border:none;cursor:pointer;
+  font-family:'DM Mono',monospace;text-decoration:underline;text-decoration-style:dotted;padding:0}
+.btn-ghost:disabled{color:var(--muted);text-decoration:none}
+.btn-export{padding:9px 16px;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;font-family:'DM Mono',monospace;font-size:.75rem;color:var(--ink);cursor:pointer}
+/* Retour row */
+.retrow{display:flex;align-items:center;gap:10px;padding:4px 0}
+.retrow input{width:20px;height:20px;accent-color:var(--accent)}
+.retrow label{font-size:.85rem;cursor:pointer}
+/* KM preview */
+.km-box{background:var(--al);border:1px solid #F5C98A;border-radius:8px;
+  padding:10px 14px;min-height:42px;display:flex;align-items:center;gap:6px;
+  font-size:.85rem;color:var(--accent)}
+.km-big{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:600}
+.km-ok{color:#c0392b;font-size:.8rem}
+/* Kantoordag toggle */
+.ktoggle{display:flex;align-items:center;gap:14px;border-radius:12px;
+  padding:14px 16px;cursor:pointer;margin-bottom:14px;
+  transition:all .2s;user-select:none;border:2px solid var(--border);background:var(--surface)}
+.ktoggle.on{background:linear-gradient(135deg,#eb7e13 0%,#d4700f 100%);
+  border-color:var(--accent);box-shadow:0 3px 12px rgba(235,126,19,.3)}
+.kswitch{width:44px;height:26px;border-radius:13px;flex-shrink:0;
+  background:var(--border);position:relative;transition:background .2s}
+.ktoggle.on .kswitch{background:rgba(255,255,255,.35)}
+.kknob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#aaa;transition:left .2s,background .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.ktoggle.on .kknob{left:21px;background:#fff}
+.ktitle{font-size:.9rem;font-weight:700;color:var(--ink)}
+.ktoggle.on .ktitle{color:#fff}
+.ksub{font-size:.65rem;margin-top:2px;color:var(--muted)}
+.ktoggle.on .ksub{color:rgba(255,255,255,.85)}
+.kret{display:flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.4);
+  border-radius:8px;padding:5px 10px;cursor:pointer;flex-shrink:0;
+  background:rgba(255,255,255,.1)}
+.kret.on{background:rgba(255,255,255,.25)}
+.kcheck{width:16px;height:16px;border-radius:4px;border:2px solid #fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;background:transparent}
+.kcheck.on{background:#fff}
+.kcheck.on::after{content:'✓';font-size:.65rem;color:var(--accent);font-weight:900;line-height:1}
+.kret span{font-size:.7rem;color:#fff;font-weight:600}
+/* Stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 14px 11px}
+.stat.wide{grid-column:span 2}
+.sl{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.sv{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:600;color:var(--accent);line-height:1}
+.su{font-size:.72rem;color:var(--muted);margin-left:2px}
+/* Filter row */
+.frow{display:flex;gap:8px;margin-bottom:14px}
+.frow input{flex:1}
+.frow input[type=month]{max-width:145px;flex-shrink:0}
+.erow{display:flex;justify-content:flex-end;margin-bottom:12px}
+/* Rit cards */
+.rlist{display:flex;flex-direction:column;gap:8px}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.rcard.k{border-left:3px solid var(--accent)}
+.rdatum{font-size:.66rem;color:var(--muted)}
+.rroute{font-size:.82rem;font-weight:500;margin-top:2px}
+.rkm{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;color:var(--accent)}
+.rkmu{font-size:.68rem;color:var(--muted)}
+.rinfo{font-size:.7rem;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:.58rem;border-radius:20px;padding:2px 7px;text-transform:uppercase;letter-spacing:.06em}
+.badge-r{background:var(--sl);color:var(--success);border:1px solid #B5CFDC}
+.badge-k{background:var(--al);color:var(--accent);border:1px solid #F5C98A}
+.del{background:none;border:none;color:var(--border);font-size:.9rem;cursor:pointer;margin-left:auto;padding:0 2px}
+/* Empty */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-ico{font-size:3rem;margin-bottom:10px;opacity:.3}
+/* Home card */
+.hcard{background:var(--brown);border-radius:10px;padding:14px 16px;margin-bottom:18px;position:relative;overflow:hidden}
+.hcard::before{content:'⌂';position:absolute;right:14px;top:10px;font-size:2rem;opacity:.12;color:#fff}
+.hc-lbl{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#D4BFA8;margin-bottom:4px}
+.hc-val{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:300;color:#fff;min-height:26px}
+.hc-val.empty{color:#C9B49A;font-style:italic;font-size:.9rem}
+.hc-row{display:flex;gap:8px;margin-top:10px}
+.hc-inp{flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  border-radius:8px;padding:9px 12px;color:#fff;font-family:'DM Mono',monospace;font-size:.9rem;outline:none}
+.hc-inp::placeholder{color:#C9B49A}
+.hc-inp:focus{border-color:var(--accent)}
+.sec-lbl{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--brown);color:#fff;padding:11px 22px;border-radius:24px;
+  font-size:.82rem;border:2px solid var(--accent);
+  opacity:0;transition:transform .3s ease,opacity .3s ease;
+  z-index:200;white-space:nowrap;pointer-events:none}
+.toast.on{transform:translateX(-50%) translateY(0);opacity:1}
+/* Section label in settings */
+.info-block{display:flex;align-items:center;gap:12px;padding:4px 0}
+.pc-tag{background:var(--al);color:var(--accent);border-radius:4px;padding:1px 6px;margin-right:4px;font-size:.68rem}
+</style>
 </head>
 <body>
-  <div class="app">
-    <!-- Header -->
-    <header>
-      <div class="header-title"><span>🚗</span> Rittenregistratie</div>
-      <div class="header-year" id="year"></div>
-    </header>
 
-    <!-- Tab bar -->
-    <nav class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab('invoer')">＋ Nieuwe rit</button>
-      <button class="tab-btn" onclick="switchTab('overzicht')">📋 Overzicht</button>
-      <button class="tab-btn" onclick="switchTab('instellingen')">⚙ Instellingen</button>
-    </nav>
+<header class="hdr">
+  <h1>🚗 Rittenregistratie</h1>
+  <div class="hdr-sub" id="jaar"></div>
+</header>
 
-    <!-- INVOER TAB -->
-    <div data-tab="invoer" class="panel active">
-      <div class="form-block">
-        <div class="form-row">
-          <label class="label">Datum</label>
-          <input type="date" id="datum" />
-        </div>
-        <div class="form-row">
-          <div class="label-row">
-            <label class="label">Vertrek postcode</label>
-            <button class="use-home-btn" id="btnVanThuis" onclick="useThuisVan()">← thuis</button>
-          </div>
-          <input type="text" id="van" placeholder="1234 AB" maxlength="7" onchange="formatInput(this)" oninput="berekenKm()" />
-        </div>
-        <div class="form-row">
-          <div class="label-row">
-            <label class="label">Aankomst postcode</label>
-            <button class="use-home-btn" id="btnNaarThuis" onclick="useThuisNaar()">← thuis</button>
-          </div>
-          <input type="text" id="naar" placeholder="5678 CD" maxlength="7" onchange="formatInput(this)" oninput="berekenKm()" />
-        </div>
-        <div class="retour-row">
-          <input type="checkbox" id="retour" onchange="berekenKm()" />
-          <label for="retour">Retour (heen + terug)</label>
-        </div>
-        <div class="form-row" style="margin-top: 10px;">
-          <label class="label">Berekende afstand</label>
-          <div class="km-preview" id="kmPreview">Vul postcodes in…</div>
-        </div>
-      </div>
+<nav class="tabs">
+  <button class="tab on" onclick="setTab('invoer',this)">＋ Nieuwe rit</button>
+  <button class="tab" onclick="setTab('overzicht',this)">📋 Overzicht</button>
+  <button class="tab" onclick="setTab('inst',this)">⚙ Instellingen</button>
+</nav>
 
-      <div class="form-block">
-        <div class="form-row">
-          <label class="label">Bestemming (naam)</label>
-          <input type="text" id="bestemming" placeholder="Bijv. Klant Rotterdam" />
-        </div>
-        <div class="form-row" style="margin-bottom: 0;">
-          <label class="label">Doel / opmerking</label>
-          <textarea id="opmerking" placeholder="Bijv. Klantbezoek, vergadering…"></textarea>
-        </div>
-      </div>
+<!-- INVOER -->
+<div class="panel on" id="p-invoer">
 
-      <button class="btn-add" onclick="voegRitToe()">+ Rit toevoegen</button>
+  <!-- Kantoordag toggle -->
+  <div class="ktoggle" id="ktoggle" onclick="toggleKantoor()">
+    <div class="kswitch"><div class="kknob"></div></div>
+    <div style="flex:1">
+      <div class="ktitle">🏢 Kantoordag</div>
+      <div class="ksub">Heemskerk (1965 RK) → CTMH Heerhugowaard (1703 WE)</div>
     </div>
-
-    <!-- OVERZICHT TAB -->
-    <div data-tab="overzicht" class="panel">
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-label">Totaal km</div>
-          <div><span class="stat-value" id="totaalKm">0</span><span class="stat-unit">km</span></div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Ritten</div>
-          <div><span class="stat-value" id="aantalRitten">0</span></div>
-        </div>
-        <div class="stat-box wide">
-          <div class="stat-label" id="tarieflabel">Vergoeding (€ 0.23 / km)</div>
-          <div><span class="stat-value">€ <span id="totaalVergoeding">0.00</span></span></div>
-        </div>
-      </div>
-
-      <div class="filter-row">
-        <input type="text" id="filterText" placeholder="Zoek…" onkeyup="filterRitten()" />
-        <input type="month" id="filterMaand" onchange="filterRitten()" />
-      </div>
-
-      <div class="export-row">
-        <button class="export-btn" onclick="exportCSV()">↓ Exporteer CSV</button>
-      </div>
-
-      <div id="rittenContainer"></div>
+    <div class="kret" id="kret" onclick="event.stopPropagation();toggleRetour()" style="display:none">
+      <div class="kcheck on" id="kcheck"></div>
+      <span>Retour</span>
     </div>
-
-    <!-- INSTELLINGEN TAB -->
-    <div data-tab="instellingen" class="panel">
-      <div class="section-label">Thuisadres</div>
-      <div class="home-card">
-        <div class="hc-label">Standaard vertrekpunt</div>
-        <div class="hc-value" id="thuisDisplay">Nog niet ingesteld</div>
-        <div class="home-edit-row">
-          <input type="text" class="home-input" id="thuisInput" placeholder="1234 AB" maxlength="7" />
-          <button class="btn-sm" onclick="saveThuis()">Opslaan</button>
-        </div>
-      </div>
-
-      <div class="section-label">Vergoeding per km</div>
-      <div class="form-block" style="margin-bottom: 20px;">
-        <div class="form-row">
-          <label class="label">Tarief (€ per km)</label>
-          <input type="text" id="tariefInput" placeholder="0.23" inputmode="decimal" />
-        </div>
-        <button class="btn-add" onclick="saveTarief()">Opslaan</button>
-      </div>
-
-      <div class="section-label">Gegevens</div>
-      <div class="form-block">
-        <p style="font-size: 0.78rem; color: var(--muted); margin-bottom: 14px; line-height: 1.6;">
-          Alle ritten worden lokaal opgeslagen op dit apparaat. Exporteer regelmatig als CSV voor je administratie.
-        </p>
-        <button class="btn-add btn-danger" onclick="wisAlleRitten()">🗑 Alle ritten wissen</button>
-      </div>
-    </div>
-
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
   </div>
 
-  <script>
-    // ─────────────────────────────────────────────────────────────
-    // CONSTANTS & UTILITIES
-    // ─────────────────────────────────────────────────────────────
-    const COLORS = {
-      muted: '#68749c',
-      accent: '#eb7e13',
-      success: '#7a98ad',
-    };
+  <div class="block">
+    <div class="row">
+      <label class="lbl">Datum</label>
+      <input type="date" id="datum">
+    </div>
+    <div class="row">
+      <div class="lrow">
+        <label class="lbl" style="margin:0">Vertrek postcode</label>
+        <button class="btn-ghost" id="btn-thuis-van" onclick="useThuis('van')" disabled>← thuis</button>
+      </div>
+      <input type="text" id="van" placeholder="1234 AB" maxlength="7"
+        oninput="fmtPC(this);herbereken()" autocomplete="off">
+    </div>
+    <div class="row">
+      <div class="lrow">
+        <label class="lbl" style="margin:0">Aankomst postcode</label>
+        <button class="btn-ghost" id="btn-thuis-naar" onclick="useThuis('naar')" disabled>← thuis</button>
+      </div>
+      <input type="text" id="naar" placeholder="5678 CD" maxlength="7"
+        oninput="fmtPC(this);herbereken()" autocomplete="off">
+    </div>
+    <div class="retrow" id="retrow">
+      <input type="checkbox" id="retour" onchange="herbereken()">
+      <label for="retour">Retour (heen + terug)</label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <label class="lbl">Berekende afstand</label>
+      <div class="km-box" id="km-box">
+        <span style="color:var(--muted);font-size:.78rem">Vul postcode in…</span>
+      </div>
+    </div>
+  </div>
 
-    function load(k, def) {
-      try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; }
-    }
+  <div class="block">
+    <div class="row">
+      <label class="lbl">Bestemming (naam)</label>
+      <input type="text" id="bestemming" placeholder="Bijv. Klant Rotterdam" autocomplete="off">
+    </div>
+    <div class="row" style="margin-bottom:0">
+      <label class="lbl">Doel / opmerking</label>
+      <textarea id="opmerking" placeholder="Bijv. Klantbezoek, vergadering…"></textarea>
+    </div>
+  </div>
 
-    function save(k, v) {
-      try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
-    }
+  <button class="btn-main" onclick="voegToe()">+ Rit toevoegen</button>
+</div>
 
-    function cleanPC(pc) {
-      return pc.replace(/\s/g, '').toUpperCase();
-    }
+<!-- OVERZICHT -->
+<div class="panel" id="p-overzicht">
+  <div class="stats">
+    <div class="stat"><div class="sl">Totaal km</div><div><span class="sv" id="s-km">0</span><span class="su">km</span></div></div>
+    <div class="stat"><div class="sl">Ritten</div><div><span class="sv" id="s-rit">0</span></div></div>
+    <div class="stat wide"><div class="sl" id="s-tar-lbl">Vergoeding (€ 0,23 / km)</div><div><span class="sv" id="s-verg">€ 0,00</span></div></div>
+  </div>
+  <div class="frow">
+    <input type="text" id="zoek" placeholder="Zoek…" oninput="renderLijst()">
+    <input type="month" id="fmaand" oninput="renderLijst()">
+  </div>
+  <div class="erow"><button class="btn-export" onclick="exportCSV()">↓ Exporteer CSV</button></div>
+  <div class="rlist" id="rlist"></div>
+  <div class="empty" id="empty" style="display:none">
+    <div class="empty-ico">🚗</div>
+    <p style="font-size:.82rem;line-height:1.6">Nog geen ritten.<br>Voeg toe via "Nieuwe rit".</p>
+  </div>
+</div>
 
-    function validPC(pc) {
-      return /^[0-9]{4}[A-Z]{2}$/.test(cleanPC(pc));
-    }
+<!-- INSTELLINGEN -->
+<div class="panel" id="p-inst">
+  <div class="sec-lbl">Thuisadres</div>
+  <div class="hcard">
+    <div class="hc-lbl">Standaard vertrekpunt</div>
+    <div class="hc-val empty" id="hc-val">Nog niet ingesteld</div>
+    <div class="hc-row">
+      <input class="hc-inp" id="thuis-inp" placeholder="1234 AB" maxlength="7" oninput="fmtPC(this)">
+      <button class="btn-sm" onclick="saveThuis()">Opslaan</button>
+    </div>
+  </div>
 
-    function formatPC(pc) {
-      const c = cleanPC(pc);
-      return c.slice(0, 4) + ' ' + c.slice(4);
-    }
-
-    function formatDatum(d) {
-      const [y, m, day] = d.split('-');
-      return `${day}-${m}-${y}`;
-    }
-
-    function vandaag() {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    function haversine(a, b) {
-      const R = 6371;
-      const dL = (b.lat - a.lat) * Math.PI / 180;
-      const dO = (b.lon - a.lon) * Math.PI / 180;
-      const x = Math.sin(dL / 2) ** 2 + Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dO / 2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // CACHE & POSTCODES.IO
-    // ─────────────────────────────────────────────────────────────
-    let _cache = load('kmCache', {});
-
-    async function getLatLon(postcode) {
-      const pc = cleanPC(postcode);
-      const key = 'll_' + pc;
-      if (_cache[key]) return _cache[key];
-      try {
-        const r = await fetch(`https://api.postcodes.io/postcodes/${pc}`);
-        const d = await r.json();
-        if (d.status !== 200) return null;
-        const res = { lat: d.result.latitude, lon: d.result.longitude };
-        _cache[key] = res;
-        save('kmCache', _cache);
-        return res;
-      } catch { return null; }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // TOAST
-    // ─────────────────────────────────────────────────────────────
-    let toastTimeout;
-
-    function showToast(msg) {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => el.classList.remove('show'), 2800);
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // STATE
-    // ─────────────────────────────────────────────────────────────
-    let ritten = load('ritten', []);
-    let thuis = load('thuisPostcode', '');
-    let tarief = load('tarief', 0.23);
-
-    let kmBerekenTimer;
-    let kmInfo = null;
-    let berekendeKm = 0;
-
-    // ─────────────────────────────────────────────────────────────
-    // TAB SWITCHING
-    // ─────────────────────────────────────────────────────────────
-    function switchTab(name) {
-      document.querySelectorAll('[data-tab]').forEach(t => t.classList.remove('active'));
-      document.querySelector(`[data-tab="${name}"]`).classList.add('active');
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
-      if (name === 'overzicht') updateOverzicht();
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // FORM INPUT
-    // ─────────────────────────────────────────────────────────────
-    function formatInput(el) {
-      let s = el.value.replace(/\s/g, '').toUpperCase();
-      if (s.length > 4) s = s.slice(0, 4) + ' ' + s.slice(4);
-      el.value = s.slice(0, 7);
-      berekenKm();
-    }
-
-    async function berekenKm() {
-      const van = document.getElementById('van').value;
-      const naar = document.getElementById('naar').value;
-      const retour = document.getElementById('retour').checked;
-      const preview = document.getElementById('kmPreview');
-
-      clearTimeout(kmBerekenTimer);
-
-      if (!validPC(van) || !validPC(naar)) {
-        kmInfo = null;
-        berekendeKm = 0;
-        preview.innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">Vul postcodes in…</span>`;
-        return;
-      }
-
-      if (cleanPC(van) === cleanPC(naar)) {
-        kmInfo = { zelfde: true };
-        berekendeKm = 0;
-        preview.innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">Zelfde postcode</span>`;
-        return;
-      }
-
-      kmInfo = { bezig: true };
-      preview.innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">● Berekenen…</span>`;
-
-      kmBerekenTimer = setTimeout(async () => {
-        const [a, b] = await Promise.all([getLatLon(van), getLatLon(naar)]);
-        if (!a || !b) {
-          kmInfo = { fout: true };
-          berekendeKm = 0;
-          preview.innerHTML = `<span style="color: ${COLORS.accent};">Postcode niet gevonden</span>`;
-          return;
-        }
-        const enkeling = Math.round(haversine(a, b));
-        const km = retour ? enkeling * 2 : enkeling;
-        kmInfo = { km, enkeling, retour };
-        berekendeKm = km;
-        let html = `<span class="km-num">${km}</span> <span>km</span>`;
-        if (retour) html += ` <span style="font-size: 0.68rem; color: ${COLORS.success};">(${enkeling} × 2)</span>`;
-        preview.innerHTML = html;
-      }, 450);
-    }
-
-    async function voegRitToe() {
-      const datum = document.getElementById('datum').value;
-      const van = document.getElementById('van').value;
-      const naar = document.getElementById('naar').value;
-      const retour = document.getElementById('retour').checked;
-
-      if (!datum) { showToast('Selecteer een datum'); return; }
-      if (!validPC(van)) { showToast('Ongeldige vertrek postcode'); return; }
-      if (!validPC(naar)) { showToast('Ongeldige aankomst postcode'); return; }
-
-      let km = berekendeKm;
-      if (!km) {
-        const [a, b] = await Promise.all([getLatLon(van), getLatLon(naar)]);
-        if (!a || !b) { showToast('Kon afstand niet berekenen'); return; }
-        const e = Math.round(haversine(a, b));
-        km = retour ? e * 2 : e;
-      }
-
-      const bestemming = document.getElementById('bestemming').value;
-      const opmerking = document.getElementById('opmerking').value;
-
-      const nieuw = {
-        id: Date.now(),
-        datum,
-        van: cleanPC(van),
-        naar: cleanPC(naar),
-        bestemming,
-        opmerking,
-        retour,
-        km,
-      };
-
-      ritten.unshift(nieuw);
-      save('ritten', ritten);
-
-      document.getElementById('naar').value = '';
-      document.getElementById('bestemming').value = '';
-      document.getElementById('opmerking').value = '';
-      document.getElementById('retour').checked = false;
-      document.getElementById('datum').value = vandaag();
-      document.getElementById('van').value = '';
-      kmInfo = null;
-      berekendeKm = 0;
-      document.getElementById('kmPreview').innerHTML = `<span style="color: ${COLORS.muted}; font-size: 0.78rem;">Vul postcodes in…</span>`;
-
-      showToast('Rit toegevoegd ✓');
-    }
-
-    function verwijderRit(id) {
-      if (!confirm('Rit verwijderen?')) return;
-      ritten = ritten.filter(r => r.id !== id);
-      save('ritten', ritten);
-      updateOverzicht();
-      showToast('Rit verwijderd');
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // THUIS & TARIEF
-    // ─────────────────────────────────────────────────────────────
-    function useThuisVan() {
-      if (thuis) document.getElementById('van').value = formatPC(thuis);
-      berekenKm();
-    }
-
-    function useThuisNaar() {
-      if (thuis) document.getElementById('naar').value = formatPC(thuis);
-      berekenKm();
-    }
-
-    function saveThuis() {
-      const val = document.getElementById('thuisInput').value;
-      if (!validPC(val)) { showToast('Voer een geldige postcode in'); return; }
-      thuis = cleanPC(val);
-      save('thuisPostcode', thuis);
-      document.getElementById('thuisInput').value = '';
-      updateInstellingen();
-      showToast('Thuisadres opgeslagen ✓');
-    }
-
-    function saveTarief() {
-      const val = document.getElementById('tariefInput').value.replace(',', '.');
-      const t = parseFloat(val);
-      if (isNaN(t) || t <= 0) { showToast('Voer een geldig tarief in'); return; }
-      tarief = t;
-      save('tarief', tarief);
-      showToast('Tarief opgeslagen ✓');
-      updateOverzicht();
-    }
-
-    function updateInstellingen() {
-      const display = document.getElementById('thuisDisplay');
-      if (thuis) {
-        display.textContent = formatPC(thuis);
-        display.classList.remove('empty');
-      } else {
-        display.textContent = 'Nog niet ingesteld';
-        display.classList.add('empty');
-      }
-      document.getElementById('btnVanThuis').disabled = !thuis;
-      document.getElementById('btnNaarThuis').disabled = !thuis;
-      document.getElementById('tariefInput').value = String(tarief).replace('.', ',');
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // OVERZICHT
-    // ─────────────────────────────────────────────────────────────
-    function updateOverzicht() {
-      const totaalKm = ritten.reduce((s, r) => s + r.km, 0);
-      document.getElementById('totaalKm').textContent = totaalKm;
-      document.getElementById('aantalRitten').textContent = ritten.length;
-      document.getElementById('totaalVergoeding').textContent = (totaalKm * tarief).toFixed(2).replace('.', ',');
-      document.getElementById('tarieflabel').textContent = `Vergoeding (€ ${String(tarief).replace('.', ',')} / km)`;
-      filterRitten();
-    }
-
-    function filterRitten() {
-      const filterText = document.getElementById('filterText').value.toLowerCase();
-      const filterMaand = document.getElementById('filterMaand').value;
-
-      const gefilterd = ritten.filter(r => {
-        const t = (r.bestemming + r.opmerking + r.van + r.naar).toLowerCase();
-        return t.includes(filterText) && (!filterMaand || r.datum.startsWith(filterMaand));
-      });
-
-      const container = document.getElementById('rittenContainer');
-      if (gefilterd.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">🚗</div>
-            <p>Nog geen ritten.<br />Voeg je eerste rit toe via "Nieuwe rit".</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = `<div class="rit-list">${gefilterd.map(r => `
-        <div class="rit-card">
-          <div>
-            <div>
-              <div class="rit-datum">${formatDatum(r.datum)}</div>
-              <div class="rit-route">${formatPC(r.van)} → ${formatPC(r.naar)}</div>
-            </div>
-            <div style="text-align: right;">
-              <span class="rit-km">${r.km}</span>
-              <span class="rit-km-unit"> km</span>
-            </div>
-          </div>
-          <div class="rit-info">
-            ${r.bestemming ? `<span>${r.bestemming}</span>` : ''}
-            ${r.opmerking ? `<span style="opacity: 0.75;">${r.opmerking}</span>` : ''}
-            ${r.retour ? `<span class="retour-badge">retour</span>` : ''}
-            <button class="del-btn" onclick="verwijderRit(${r.id})">✕</button>
-          </div>
+  <div class="sec-lbl">Vaste kantoorrit</div>
+  <div class="block" style="margin-bottom:20px">
+    <div class="info-block">
+      <span style="font-size:1.6rem">🏢</span>
+      <div>
+        <div style="font-size:.82rem;font-weight:600;margin-bottom:4px">Kantoordag CTMH</div>
+        <div style="font-size:.68rem;color:var(--muted);line-height:1.8">
+          <span class="pc-tag">1965 RK</span>Heemskerk<br>
+          <span class="pc-tag">1703 WE</span>CTMH Heerhugowaard
         </div>
-      `).join('')}</div>`;
-    }
+        <div style="font-size:.65rem;color:var(--success);margin-top:4px">↩ Standaard retour · ~22 km per rit</div>
+      </div>
+    </div>
+  </div>
 
-    function exportCSV() {
-      if (!ritten.length) { showToast('Geen ritten om te exporteren'); return; }
-      const hdr = ['Datum', 'Van', 'Naar', 'Bestemming', 'Opmerking', 'Retour', 'Kilometers'];
-      const rows = ritten.map(r => [r.datum, formatPC(r.van), formatPC(r.naar), r.bestemming, r.opmerking, r.retour ? 'Ja' : 'Nee', r.km].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(';'));
-      const csv = [hdr.join(';'), ...rows].join('\n');
-      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ritten_${vandaag()}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('CSV geëxporteerd ✓');
-    }
+  <div class="sec-lbl">Vergoeding per km</div>
+  <div class="block" style="margin-bottom:20px">
+    <div class="row">
+      <label class="lbl">Tarief (€ per km)</label>
+      <input type="text" id="tarief-inp" placeholder="0.23" inputmode="decimal">
+    </div>
+    <button class="btn-main" onclick="saveTarief()">Opslaan</button>
+  </div>
 
-    function wisAlleRitten() {
-      if (!confirm('Weet je zeker dat je ALLE ritten wilt wissen?')) return;
-      ritten = [];
-      save('ritten', ritten);
-      updateOverzicht();
-      showToast('Alle ritten gewist');
-    }
+  <div class="sec-lbl">Gegevens</div>
+  <div class="block">
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px;line-height:1.6">
+      Alle ritten worden lokaal opgeslagen op dit apparaat.
+    </p>
+    <button class="btn-main" style="background:#c0392b" onclick="wisAlles()">🗑 Alle ritten wissen</button>
+  </div>
+</div>
 
-    // ─────────────────────────────────────────────────────────────
-    // INIT
-    // ─────────────────────────────────────────────────────────────
-    window.addEventListener('load', () => {
-      document.getElementById('year').textContent = new Date().getFullYear();
-      document.getElementById('datum').value = vandaag();
-      updateInstellingen();
-      updateOverzicht();
-    });
-  </script>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Postcode dataset (geen API nodig) ──────────────────────────
+const PC={1011:[52.373,4.897],1012:[52.37,4.893],1013:[52.38,4.873],1015:[52.381,4.878],1016:[52.364,4.879],1017:[52.36,4.9],1018:[52.362,4.912],1019:[52.356,4.937],1020:[52.412,4.847],1021:[52.398,4.931],1022:[52.393,4.945],1023:[52.385,4.939],1024:[52.355,4.97],1025:[52.348,4.956],1026:[52.352,4.974],1027:[52.366,4.952],1028:[52.342,4.959],1029:[52.33,4.976],1030:[52.404,4.925],1031:[52.406,4.941],1032:[52.4,4.948],1033:[52.397,4.917],1034:[52.391,4.92],1035:[52.388,4.907],1036:[52.394,4.896],1037:[52.383,4.922],1038:[52.376,4.944],1039:[52.374,4.963],1040:[52.368,4.964],1041:[52.36,4.962],1042:[52.353,4.944],1043:[52.347,4.93],1044:[52.344,4.916],1045:[52.343,4.903],1046:[52.347,4.901],1047:[52.354,4.915],1048:[52.346,4.932],1049:[52.35,4.942],1051:[52.353,4.872],1052:[52.356,4.855],1053:[52.358,4.844],1054:[52.364,4.851],1055:[52.369,4.85],1056:[52.376,4.85],1057:[52.376,4.865],1058:[52.372,4.869],1059:[52.368,4.869],1060:[52.36,4.831],1061:[52.363,4.817],1062:[52.354,4.816],1063:[52.343,4.829],1064:[52.336,4.855],1065:[52.329,4.875],1066:[52.328,4.858],1067:[52.338,4.843],1068:[52.34,4.852],1069:[52.335,4.87],1070:[52.352,4.886],1071:[52.355,4.877],1072:[52.348,4.883],1073:[52.35,4.886],1074:[52.344,4.891],1075:[52.334,4.874],1076:[52.338,4.879],1077:[52.342,4.886],1078:[52.338,4.9],1079:[52.331,4.893],1080:[52.329,4.865],1081:[52.329,4.88],1082:[52.334,4.866],1083:[52.338,4.872],1084:[52.326,4.883],1085:[52.32,4.886],1086:[52.315,4.909],1087:[52.321,4.923],1088:[52.328,4.93],1089:[52.321,4.943],1090:[52.332,4.929],1091:[52.351,4.918],1092:[52.355,4.928],1093:[52.359,4.935],1094:[52.363,4.937],1095:[52.361,4.949],1096:[52.348,4.957],1097:[52.346,4.951],1098:[52.341,4.958],1099:[52.333,4.953],1101:[52.305,4.95],1102:[52.31,4.97],1103:[52.318,4.96],1104:[52.323,4.953],1105:[52.325,4.975],1106:[52.315,4.983],1107:[52.309,4.976],1108:[52.302,4.965],1131:[52.499,5.071],1132:[52.494,5.061],1135:[52.503,5.047],1211:[52.225,5.173],1212:[52.221,5.18],1213:[52.217,5.187],1214:[52.222,5.163],1215:[52.228,5.166],1216:[52.231,5.172],1217:[52.234,5.179],1218:[52.229,5.159],1221:[52.216,5.192],1222:[52.212,5.198],1223:[52.219,5.195],1224:[52.236,5.185],1301:[52.379,5.21],1302:[52.373,5.226],1303:[52.362,5.207],1304:[52.344,5.211],1305:[52.329,5.212],1306:[52.319,5.24],1307:[52.305,5.255],1308:[52.295,5.268],1309:[52.288,5.277],1311:[52.357,5.239],1312:[52.348,5.24],1313:[52.339,5.247],1314:[52.329,5.251],1315:[52.319,5.251],1316:[52.307,5.263],1317:[52.298,5.277],1318:[52.291,5.291],1319:[52.281,5.302],1321:[52.357,5.191],1322:[52.347,5.188],1323:[52.339,5.191],1324:[52.331,5.198],1325:[52.324,5.206],1326:[52.317,5.214],1327:[52.338,5.23],1328:[52.325,5.227],1329:[52.314,5.233],1331:[52.371,5.23],1332:[52.367,5.243],1333:[52.359,5.25],1334:[52.35,5.249],1335:[52.342,5.253],1336:[52.332,5.258],1337:[52.32,5.262],1338:[52.311,5.272],1339:[52.303,5.283],1341:[52.349,5.218],1342:[52.34,5.221],1343:[52.33,5.224],1344:[52.321,5.228],1345:[52.312,5.235],1346:[52.304,5.244],1441:[52.503,4.956],1442:[52.507,4.963],1443:[52.51,4.97],1444:[52.513,4.977],1445:[52.497,4.949],1446:[52.499,4.942],1501:[52.442,4.812],1502:[52.445,4.82],1503:[52.448,4.828],1504:[52.451,4.836],1505:[52.438,4.805],1506:[52.435,4.797],1601:[52.703,5.293],1602:[52.7,5.286],1603:[52.697,5.279],1621:[52.642,5.059],1622:[52.645,5.066],1623:[52.648,5.073],1624:[52.638,5.053],1625:[52.635,5.046],1626:[52.632,5.039],1700:[52.672,4.834],1701:[52.669,4.827],1702:[52.666,4.841],1703:[52.66,4.858],1704:[52.655,4.849],1705:[52.651,4.854],1706:[52.647,4.859],1707:[52.643,4.863],1708:[52.639,4.868],1709:[52.635,4.871],1811:[52.634,4.752],1812:[52.637,4.759],1813:[52.64,4.766],1814:[52.643,4.773],1815:[52.637,4.746],1816:[52.63,4.739],1817:[52.627,4.747],1821:[52.649,4.751],1822:[52.652,4.758],1823:[52.655,4.765],1941:[52.481,4.652],1942:[52.483,4.659],1943:[52.486,4.666],1944:[52.489,4.674],1945:[52.491,4.682],1951:[52.46,4.617],1952:[52.463,4.624],1953:[52.466,4.631],1954:[52.469,4.638],1955:[52.472,4.645],1961:[52.479,4.633],1962:[52.482,4.64],1963:[52.485,4.647],1964:[52.488,4.654],1965:[52.498,4.679],1966:[52.503,4.676],1967:[52.506,4.668],1968:[52.51,4.661],1969:[52.514,4.655],2011:[52.382,4.634],2012:[52.376,4.627],2013:[52.369,4.618],2014:[52.362,4.609],2015:[52.388,4.64],2016:[52.395,4.649],2017:[52.401,4.657],2018:[52.394,4.638],2021:[52.398,4.621],2022:[52.393,4.611],2023:[52.385,4.601],2024:[52.378,4.594],2025:[52.371,4.587],2026:[52.405,4.63],2027:[52.41,4.641],2031:[52.397,4.669],2032:[52.391,4.661],2033:[52.383,4.655],2034:[52.376,4.648],2035:[52.37,4.641],2037:[52.415,4.658],2038:[52.419,4.669],2040:[52.426,4.67],2041:[52.43,4.681],2042:[52.433,4.693],2311:[52.158,4.488],2312:[52.153,4.479],2313:[52.146,4.47],2314:[52.141,4.479],2315:[52.137,4.49],2316:[52.132,4.496],2317:[52.128,4.507],2318:[52.136,4.513],2321:[52.161,4.501],2322:[52.157,4.51],2323:[52.152,4.519],2324:[52.164,4.517],2325:[52.169,4.526],2331:[52.168,4.493],2332:[52.173,4.502],2333:[52.178,4.511],2334:[52.168,4.479],2341:[52.172,4.467],2342:[52.175,4.455],2343:[52.181,4.469],2351:[52.182,4.482],2352:[52.187,4.489],2491:[52.07,4.3],2492:[52.066,4.308],2493:[52.061,4.318],2494:[52.057,4.327],2495:[52.052,4.337],2496:[52.047,4.347],2497:[52.043,4.356],2498:[52.04,4.363],2499:[52.037,4.372],2501:[52.082,4.3],2502:[52.086,4.291],2503:[52.09,4.282],2504:[52.094,4.274],2505:[52.098,4.266],2506:[52.102,4.258],2507:[52.106,4.25],2508:[52.11,4.244],2509:[52.114,4.237],2511:[52.088,4.307],2512:[52.082,4.313],2513:[52.079,4.321],2514:[52.075,4.329],2515:[52.071,4.338],2516:[52.068,4.348],2517:[52.065,4.356],2518:[52.062,4.365],2519:[52.059,4.374],2521:[52.069,4.293],2522:[52.065,4.311],2523:[52.061,4.32],2524:[52.057,4.33],2525:[52.054,4.339],2526:[52.05,4.348],2527:[52.046,4.359],2528:[52.042,4.369],2529:[52.038,4.379],2531:[52.092,4.296],2532:[52.097,4.291],2533:[52.101,4.285],2534:[52.105,4.279],2535:[52.109,4.272],2536:[52.113,4.266],2537:[52.117,4.26],2538:[52.121,4.253],2539:[52.125,4.247],2541:[52.074,4.325],2542:[52.071,4.332],2543:[52.068,4.34],2544:[52.064,4.349],2545:[52.061,4.358],2546:[52.057,4.368],2547:[52.054,4.377],2548:[52.05,4.387],2549:[52.046,4.396],2551:[52.066,4.284],2552:[52.061,4.29],2553:[52.057,4.296],2554:[52.053,4.302],2555:[52.049,4.308],2556:[52.045,4.314],2557:[52.041,4.32],2558:[52.037,4.326],2559:[52.033,4.332],2561:[52.079,4.271],2562:[52.076,4.264],2563:[52.072,4.258],2564:[52.068,4.252],2565:[52.064,4.246],2566:[52.06,4.24],2571:[52.049,4.25],2572:[52.046,4.26],2573:[52.043,4.27],2574:[52.04,4.28],2575:[52.037,4.29],2611:[52.012,4.359],2612:[52.008,4.363],2613:[52.004,4.367],2614:[52.001,4.371],2615:[51.997,4.375],2616:[51.993,4.379],2621:[52.016,4.353],2622:[52.02,4.347],2623:[52.024,4.341],2624:[52.019,4.366],2625:[52.015,4.374],3011:[51.922,4.477],3012:[51.917,4.489],3013:[51.913,4.496],3014:[51.909,4.505],3015:[51.905,4.514],3016:[51.901,4.523],3017:[51.897,4.532],3018:[51.892,4.542],3019:[51.888,4.551],3021:[51.923,4.45],3022:[51.918,4.456],3023:[51.914,4.443],3024:[51.909,4.437],3025:[51.905,4.43],3026:[51.901,4.423],3027:[51.896,4.417],3028:[51.892,4.411],3029:[51.888,4.405],3031:[51.927,4.483],3032:[51.923,4.49],3033:[51.918,4.497],3034:[51.913,4.504],3035:[51.909,4.512],3036:[51.905,4.519],3037:[51.9,4.527],3038:[51.896,4.535],3039:[51.891,4.542],3041:[51.93,4.498],3042:[51.926,4.504],3043:[51.921,4.511],3044:[51.917,4.518],3045:[51.912,4.525],3046:[51.908,4.533],3047:[51.904,4.54],3048:[51.899,4.547],3049:[51.895,4.555],3051:[51.935,4.498],3052:[51.932,4.511],3053:[51.927,4.517],3054:[51.923,4.524],3055:[51.918,4.531],3056:[51.914,4.538],3057:[51.91,4.545],3058:[51.905,4.552],3059:[51.901,4.56],3061:[51.907,4.555],3062:[51.912,4.563],3063:[51.917,4.562],3064:[51.921,4.569],3065:[51.915,4.576],3066:[51.907,4.569],3067:[51.901,4.577],3068:[51.895,4.564],3069:[51.89,4.572],3071:[51.89,4.526],3072:[51.885,4.518],3073:[51.88,4.51],3074:[51.875,4.502],3075:[51.87,4.494],3076:[51.866,4.487],3077:[51.862,4.48],3078:[51.895,4.533],3079:[51.889,4.54],3081:[51.895,4.483],3082:[51.891,4.475],3083:[51.886,4.468],3084:[51.881,4.46],3085:[51.876,4.453],3086:[51.888,4.491],3087:[51.883,4.499],3311:[51.81,4.665],3312:[51.814,4.672],3313:[51.818,4.679],3314:[51.822,4.686],3315:[51.806,4.658],3316:[51.802,4.651],3317:[51.798,4.644],3318:[51.794,4.637],3319:[51.79,4.63],3511:[52.093,5.122],3512:[52.089,5.129],3513:[52.085,5.136],3514:[52.081,5.143],3515:[52.078,5.15],3516:[52.074,5.157],3517:[52.07,5.164],3518:[52.067,5.171],3519:[52.063,5.178],3521:[52.088,5.132],3522:[52.085,5.126],3523:[52.081,5.119],3524:[52.078,5.112],3525:[52.074,5.106],3526:[52.071,5.099],3527:[52.067,5.092],3528:[52.064,5.085],3529:[52.06,5.079],3531:[52.1,5.108],3532:[52.106,5.116],3533:[52.102,5.123],3534:[52.098,5.13],3535:[52.095,5.137],3536:[52.091,5.144],3537:[52.087,5.151],3538:[52.084,5.158],3539:[52.08,5.165],3541:[52.093,5.079],3542:[52.089,5.072],3543:[52.085,5.065],3544:[52.081,5.058],3545:[52.078,5.052],3546:[52.074,5.045],3551:[52.113,5.103],3552:[52.109,5.096],3553:[52.105,5.089],3554:[52.118,5.096],3555:[52.122,5.103],3556:[52.126,5.11],3561:[52.077,5.176],3562:[52.073,5.183],3563:[52.069,5.19],3564:[52.065,5.197],3565:[52.072,5.19],3566:[52.079,5.183],3571:[52.085,5.052],3572:[52.09,5.059],3573:[52.095,5.066],3574:[52.1,5.073],3581:[52.098,5.108],3582:[52.104,5.115],3583:[52.11,5.122],3584:[52.108,5.133],3585:[52.113,5.14],3811:[52.154,5.381],3812:[52.158,5.388],3813:[52.162,5.395],3814:[52.166,5.402],3815:[52.15,5.374],3816:[52.146,5.367],3817:[52.142,5.36],3818:[52.138,5.353],3821:[52.163,5.374],3822:[52.167,5.381],3823:[52.171,5.388],3824:[52.175,5.395],3825:[52.158,5.367],3826:[52.154,5.36],3827:[52.15,5.353],3828:[52.146,5.346],4331:[51.499,3.613],4332:[51.503,3.62],4333:[51.507,3.627],4334:[51.495,3.606],4335:[51.491,3.599],4381:[51.445,3.572],4382:[51.449,3.579],4383:[51.453,3.586],4384:[51.441,3.565],4385:[51.437,3.558],4811:[51.589,4.775],4812:[51.593,4.782],4813:[51.597,4.789],4814:[51.585,4.767],4815:[51.581,4.759],4816:[51.577,4.752],4817:[51.573,4.745],4818:[51.569,4.738],4819:[51.566,4.731],4821:[51.597,4.768],4822:[51.601,4.775],4823:[51.604,4.782],4824:[51.608,4.789],4825:[51.612,4.796],4826:[51.616,4.803],4827:[51.585,4.783],4828:[51.581,4.791],5011:[51.561,5.074],5012:[51.557,5.08],5013:[51.553,5.086],5014:[51.549,5.092],5015:[51.545,5.098],5016:[51.541,5.104],5017:[51.537,5.11],5021:[51.564,5.067],5022:[51.568,5.06],5023:[51.572,5.054],5024:[51.575,5.061],5025:[51.578,5.068],5031:[51.556,5.086],5032:[51.552,5.094],5033:[51.548,5.102],5034:[51.544,5.11],5035:[51.54,5.118],5036:[51.548,5.078],5037:[51.544,5.086],5038:[51.541,5.094],5211:[51.692,5.31],5212:[51.696,5.317],5213:[51.7,5.324],5214:[51.704,5.331],5215:[51.688,5.303],5216:[51.684,5.296],5217:[51.68,5.289],5221:[51.699,5.303],5222:[51.703,5.31],5223:[51.707,5.317],5224:[51.711,5.324],5231:[51.694,5.324],5232:[51.698,5.331],5233:[51.702,5.338],5611:[51.442,5.478],5612:[51.446,5.484],5613:[51.443,5.491],5614:[51.439,5.498],5615:[51.436,5.505],5616:[51.432,5.511],5617:[51.429,5.518],5621:[51.437,5.47],5622:[51.433,5.462],5623:[51.43,5.454],5624:[51.427,5.447],5625:[51.423,5.44],5626:[51.42,5.432],5627:[51.417,5.425],5631:[51.446,5.472],5632:[51.45,5.479],5633:[51.453,5.486],5641:[51.455,5.471],5642:[51.458,5.478],5643:[51.451,5.463],5644:[51.455,5.455],5645:[51.459,5.462],5651:[51.461,5.461],5652:[51.457,5.453],5653:[51.46,5.469],6211:[50.853,5.693],6212:[50.857,5.699],6213:[50.861,5.705],6214:[50.865,5.711],6215:[50.869,5.717],6216:[50.849,5.687],6217:[50.845,5.681],6218:[50.841,5.675],6219:[50.837,5.669],6221:[50.857,5.687],6222:[50.861,5.693],6223:[50.865,5.699],6224:[50.869,5.705],6225:[50.873,5.711],6226:[50.877,5.717],6411:[50.888,5.979],6412:[50.892,5.985],6413:[50.896,5.991],6414:[50.9,5.997],6415:[50.904,6.003],6416:[50.884,5.973],6417:[50.88,5.967],6418:[50.876,5.961],6419:[50.872,5.955],6511:[51.844,5.866],6512:[51.848,5.872],6513:[51.851,5.878],6514:[51.854,5.884],6515:[51.857,5.89],6516:[51.86,5.896],6517:[51.863,5.902],6518:[51.866,5.908],6521:[51.84,5.858],6522:[51.836,5.852],6523:[51.832,5.846],6524:[51.828,5.84],6525:[51.824,5.834],6526:[51.82,5.828],6531:[51.848,5.852],6532:[51.844,5.847],6533:[51.84,5.841],6534:[51.836,5.836],6535:[51.832,5.83],6541:[51.86,5.875],6542:[51.864,5.882],6543:[51.868,5.889],6544:[51.872,5.895],6811:[51.987,5.891],6812:[51.983,5.898],6813:[51.979,5.904],6814:[51.975,5.909],6815:[51.993,5.884],6816:[51.996,5.878],6817:[51.99,5.869],6821:[52.001,5.886],6822:[52.004,5.88],6823:[52.007,5.874],6824:[52.01,5.868],6825:[52.013,5.862],6826:[52.016,5.856],6827:[52.019,5.85],6828:[52.022,5.844],6831:[51.975,5.915],6832:[51.979,5.921],6833:[51.983,5.927],6834:[51.987,5.933],6841:[51.968,5.937],6842:[51.964,5.943],6843:[51.96,5.948],7311:[52.213,5.956],7312:[52.217,5.963],7313:[52.221,5.97],7314:[52.225,5.977],7315:[52.209,5.949],7316:[52.205,5.942],7317:[52.201,5.935],7321:[52.218,5.949],7322:[52.222,5.956],7323:[52.226,5.963],7324:[52.23,5.97],7331:[52.206,5.97],7332:[52.21,5.977],7333:[52.214,5.984],7411:[52.255,6.162],7412:[52.259,6.169],7413:[52.263,6.176],7414:[52.267,6.183],7415:[52.251,6.155],7416:[52.247,6.148],7417:[52.243,6.141],7421:[52.262,6.155],7422:[52.266,6.162],7423:[52.27,6.169],7511:[52.223,6.893],7512:[52.219,6.9],7513:[52.215,6.907],7514:[52.211,6.914],7515:[52.207,6.921],7521:[52.227,6.886],7522:[52.231,6.893],7523:[52.235,6.9],7524:[52.239,6.907],7531:[52.218,6.879],7532:[52.214,6.886],7533:[52.21,6.893],7534:[52.206,6.9],7541:[52.23,6.9],7542:[52.226,6.907],7543:[52.222,6.914],7544:[52.218,6.921],8011:[52.513,6.093],8012:[52.517,6.1],8013:[52.521,6.107],8014:[52.525,6.114],8016:[52.505,6.079],8017:[52.501,6.072],8021:[52.524,6.086],8022:[52.528,6.093],8023:[52.532,6.1],8024:[52.536,6.107],8025:[52.54,6.114],8031:[52.517,6.114],8032:[52.513,6.121],8033:[52.509,6.128],8041:[52.521,6.121],8211:[52.517,5.462],8212:[52.521,5.471],8213:[52.514,5.453],8214:[52.508,5.444],8215:[52.524,5.48],8216:[52.528,5.487],8221:[52.533,5.494],8222:[52.537,5.501],8223:[52.541,5.508],8911:[53.203,5.796],8912:[53.207,5.803],8913:[53.211,5.81],8914:[53.215,5.817],8915:[53.199,5.789],8916:[53.195,5.782],8917:[53.219,5.803],8921:[53.21,5.824],8922:[53.214,5.831],8923:[53.207,5.817],9711:[53.218,6.556],9713:[53.21,6.541],9714:[53.206,6.533],9715:[53.202,6.526],9716:[53.198,6.518],9717:[53.194,6.511],9718:[53.19,6.503],9721:[53.222,6.556],9722:[53.226,6.563],9723:[53.23,6.57],9724:[53.234,6.577],9725:[53.222,6.563],9726:[53.226,6.57],9727:[53.23,6.577],9728:[53.234,6.584],9729:[53.238,6.591],9731:[53.215,6.57],9732:[53.211,6.577],9733:[53.207,6.584],9734:[53.203,6.591],9735:[53.199,6.598],9736:[53.195,6.605],9737:[53.191,6.612],9738:[53.187,6.619],9741:[53.242,6.598],9742:[53.246,6.605],9743:[53.218,6.549]};
+
+function lookupPC(v) {
+  const s = v.replace(/\s/g,'').toUpperCase();
+  const n = parseInt(s.slice(0,4));
+  if (isNaN(n)) return null;
+  if (PC[n]) return {lat:PC[n][0],lon:PC[n][1]};
+  // Dichtstbijzijnde postcode zoeken
+  let best=null, bestD=Infinity;
+  for (const k of Object.keys(PC)) {
+    const d = Math.abs(parseInt(k)-n);
+    if (d < bestD) { bestD=d; best=k; }
+  }
+  return best && bestD<=20 ? {lat:PC[best][0],lon:PC[best][1]} : null;
+}
+
+function haversine(a,b) {
+  const R=6371, dL=(b.lat-a.lat)*Math.PI/180, dO=(b.lon-a.lon)*Math.PI/180;
+  const x=Math.sin(dL/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dO/2)**2;
+  return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
+}
+
+// ── State ───────────────────────────────────────────────────────
+let ritten = JSON.parse(localStorage.getItem('ritten')||'[]');
+let thuis  = localStorage.getItem('thuis')||'';
+let tarief = parseFloat(localStorage.getItem('tarief')||'0.23');
+let isKantoor = false;
+let isRetour  = true;
+
+// ── Init ────────────────────────────────────────────────────────
+document.getElementById('jaar').textContent = new Date().getFullYear();
+document.getElementById('datum').value = vandaag();
+document.getElementById('tarief-inp').value = String(tarief).replace('.',',');
+updateThuisUI();
+renderLijst();
+updateStats();
+
+// ── Helpers ─────────────────────────────────────────────────────
+function vandaag(){ return new Date().toISOString().split('T')[0]; }
+function fmtPC(el){
+  let s=el.value.replace(/\s/g,'').toUpperCase();
+  if(s.length>4) s=s.slice(0,4)+' '+s.slice(4);
+  el.value=s.slice(0,7);
+}
+function formatPC(s){ s=s.replace(/\s/g,'').toUpperCase(); return s.slice(0,4)+' '+s.slice(4); }
+function formatDatum(d){ const[y,m,day]=d.split('-'); return `${day}-${m}-${y}`; }
+
+// ── Tabs ────────────────────────────────────────────────────────
+function setTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id==='overzicht'){renderLijst();updateStats();}
+}
+
+// ── Thuisadres ──────────────────────────────────────────────────
+function saveThuis(){
+  const v=document.getElementById('thuis-inp').value.trim();
+  if(!v){toast('Vul een postcode in');return;}
+  thuis=v.replace(/\s/g,'').toUpperCase();
+  localStorage.setItem('thuis',thuis);
+  document.getElementById('thuis-inp').value='';
+  updateThuisUI();
+  toast('Thuisadres opgeslagen ✓');
+}
+function updateThuisUI(){
+  const el=document.getElementById('hc-val');
+  const b1=document.getElementById('btn-thuis-van');
+  const b2=document.getElementById('btn-thuis-naar');
+  if(thuis){ el.textContent=formatPC(thuis); el.classList.remove('empty'); b1.disabled=false; b2.disabled=false; }
+  else { el.textContent='Nog niet ingesteld'; el.classList.add('empty'); b1.disabled=true; b2.disabled=true; }
+}
+function useThuis(dir){
+  if(!thuis)return;
+  document.getElementById(dir==='van'?'van':'naar').value=formatPC(thuis);
+  herbereken();
+}
+
+// ── Kantoordag toggle ───────────────────────────────────────────
+function toggleKantoor(){
+  isKantoor=!isKantoor;
+  const tog=document.getElementById('ktoggle');
+  const kret=document.getElementById('kret');
+  const retrow=document.getElementById('retrow');
+  tog.classList.toggle('on',isKantoor);
+  kret.style.display=isKantoor?'flex':'none';
+  retrow.style.display=isKantoor?'none':'flex';
+  if(isKantoor){
+    document.getElementById('van').value='1965 RK';
+    document.getElementById('naar').value='1703 WE';
+    document.getElementById('bestemming').value='CTMH Heerhugowaard';
+    document.getElementById('opmerking').value='Kantoordag';
+    isRetour=true;
+    document.getElementById('van').classList.add('inp-hi');
+    document.getElementById('naar').classList.add('inp-hi');
+    updateKretUI();
+  } else {
+    document.getElementById('van').value='';
+    document.getElementById('naar').value='';
+    document.getElementById('bestemming').value='';
+    document.getElementById('opmerking').value='';
+    document.getElementById('van').classList.remove('inp-hi');
+    document.getElementById('naar').classList.remove('inp-hi');
+    document.getElementById('retour').checked=false;
+  }
+  herbereken();
+}
+
+function toggleRetour(){
+  isRetour=!isRetour;
+  updateKretUI();
+  herbereken();
+}
+function updateKretUI(){
+  const kcheck=document.getElementById('kcheck');
+  const kret=document.getElementById('kret');
+  kcheck.classList.toggle('on',isRetour);
+  kret.classList.toggle('on',isRetour);
+}
+
+// ── Km berekening ───────────────────────────────────────────────
+function herbereken(){
+  const van=document.getElementById('van').value.trim();
+  const naar=document.getElementById('naar').value.trim();
+  const ret=isKantoor?isRetour:document.getElementById('retour').checked;
+  const box=document.getElementById('km-box');
+  if(!van||!naar){box.innerHTML='<span style="color:var(--muted);font-size:.78rem">Vul postcode in…</span>';return;}
+  const a=lookupPC(van), b=lookupPC(naar);
+  if(!a||!b){box.innerHTML='<span class="km-ok">Postcode niet gevonden — gebruik bijv. "1965 RK"</span>';return;}
+  const e=haversine(a,b);
+  const km=ret?e*2:e;
+  const rtxt=ret?`<span style="font-size:.68rem;color:var(--success)"> (${e} × 2 retour)</span>`:'';
+  box.innerHTML=`<span class="km-big">${km}</span> km${rtxt}`;
+}
+
+// ── Rit toevoegen ───────────────────────────────────────────────
+function voegToe(){
+  const datum=document.getElementById('datum').value;
+  const van=document.getElementById('van').value.trim();
+  const naar=document.getElementById('naar').value.trim();
+  const bestemming=document.getElementById('bestemming').value.trim();
+  const opmerking=document.getElementById('opmerking').value.trim();
+  const ret=isKantoor?isRetour:document.getElementById('retour').checked;
+  if(!datum){toast('Selecteer een datum');return;}
+  if(!van){toast('Vul een vertrekpostcode in');return;}
+  if(!naar){toast('Vul een aankomstpostcode in');return;}
+  const a=lookupPC(van),b=lookupPC(naar);
+  if(!a||!b){toast('Postcode niet herkend');return;}
+  const e=haversine(a,b);
+  const km=ret?e*2:e;
+  ritten.unshift({id:Date.now(),datum,van,naar,bestemming,opmerking,retour:ret,isKantoorrit:isKantoor,km});
+  localStorage.setItem('ritten',JSON.stringify(ritten));
+  updateStats();
+  // Reset
+  if(isKantoor){ toggleKantoor(); toggleKantoor(); } // reset toggle
+  document.getElementById('van').value='';
+  document.getElementById('naar').value='';
+  document.getElementById('bestemming').value='';
+  document.getElementById('opmerking').value='';
+  document.getElementById('retour').checked=false;
+  document.getElementById('datum').value=vandaag();
+  document.getElementById('km-box').innerHTML='<span style="color:var(--muted);font-size:.78rem">Vul postcode in…</span>';
+  isKantoor=false;
+  document.getElementById('ktoggle').classList.remove('on');
+  document.getElementById('kret').style.display='none';
+  document.getElementById('retrow').style.display='flex';
+  document.getElementById('van').classList.remove('inp-hi');
+  document.getElementById('naar').classList.remove('inp-hi');
+  toast('Rit toegevoegd ✓');
+}
+
+// ── Tarief ──────────────────────────────────────────────────────
+function saveTarief(){
+  const v=parseFloat(document.getElementById('tarief-inp').value.replace(',','.'));
+  if(isNaN(v)||v<=0){toast('Voer een geldig tarief in');return;}
+  tarief=v;
+  localStorage.setItem('tarief',tarief);
+  updateStats();
+  toast('Tarief opgeslagen ✓');
+}
+
+// ── Overzicht ───────────────────────────────────────────────────
+function renderLijst(){
+  const zoek=document.getElementById('zoek').value.toLowerCase();
+  const maand=document.getElementById('fmaand').value;
+  const list=document.getElementById('rlist');
+  const empty=document.getElementById('empty');
+  const gef=ritten.filter(r=>{
+    const t=(r.bestemming+r.opmerking+r.van+r.naar).toLowerCase();
+    return t.includes(zoek)&&(!maand||r.datum.startsWith(maand));
+  });
+  if(!gef.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=gef.map(r=>`
+    <div class="rcard${r.isKantoorrit?' k':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="rdatum">${formatDatum(r.datum)}</div>
+          <div class="rroute">${r.van} → ${r.naar}</div>
+        </div>
+        <div style="text-align:right">
+          <span class="rkm">${r.km}</span><span class="rkmu"> km</span>
+        </div>
+      </div>
+      <div class="rinfo">
+        ${r.bestemming?`<span>${r.bestemming}</span>`:''}
+        ${r.opmerking?`<span style="opacity:.75">${r.opmerking}</span>`:''}
+        ${r.retour?'<span class="badge badge-r">retour</span>':''}
+        ${r.isKantoorrit?'<span class="badge badge-k">kantoor</span>':''}
+        <button class="del" onclick="verwijder(${r.id})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function verwijder(id){
+  if(!confirm('Rit verwijderen?'))return;
+  ritten=ritten.filter(r=>r.id!==id);
+  localStorage.setItem('ritten',JSON.stringify(ritten));
+  renderLijst();updateStats();
+}
+
+function wisAlles(){
+  if(!confirm('Weet je zeker dat je ALLE ritten wilt wissen?'))return;
+  ritten=[];localStorage.setItem('ritten','[]');
+  renderLijst();updateStats();toast('Alle ritten gewist');
+}
+
+function updateStats(){
+  const tot=ritten.reduce((s,r)=>s+r.km,0);
+  document.getElementById('s-km').textContent=tot;
+  document.getElementById('s-rit').textContent=ritten.length;
+  document.getElementById('s-verg').textContent='€ '+(tot*tarief).toFixed(2).replace('.',',');
+  document.getElementById('s-tar-lbl').textContent=`Vergoeding (€ ${String(tarief).replace('.',',')} / km)`;
+}
+
+// ── CSV Export ──────────────────────────────────────────────────
+function exportCSV(){
+  if(!ritten.length){toast('Geen ritten om te exporteren');return;}
+  const hdr=['Datum','Van','Naar','Bestemming','Opmerking','Retour','Kantoorrit','Kilometers'];
+  const rows=ritten.map(r=>[r.datum,r.van,r.naar,r.bestemming,r.opmerking,r.retour?'Ja':'Nee',r.isKantoorrit?'Ja':'Nee',r.km].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(';'));
+  const blob=new Blob(['\uFEFF'+[hdr.join(';'),...rows].join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`ritten_${vandaag()}.csv`;a.click();
+  toast('CSV geëxporteerd ✓');
+}
+
+// ── Toast ───────────────────────────────────────────────────────
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2800);
+}
+
+// ── PWA ─────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  const sw=`const C='ritten-v3';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});
+}
+
+// Apple touch icon
+(function(){
+  const c=document.createElement('canvas');c.width=c.height=180;
+  const ctx=c.getContext('2d');
+  ctx.beginPath();ctx.moveTo(40,0);ctx.lineTo(140,0);ctx.quadraticCurveTo(180,0,180,40);
+  ctx.lineTo(180,140);ctx.quadraticCurveTo(180,180,140,180);ctx.lineTo(40,180);
+  ctx.quadraticCurveTo(0,180,0,140);ctx.lineTo(0,40);ctx.quadraticCurveTo(0,0,40,0);
+  ctx.closePath();ctx.fillStyle='#eb7e13';ctx.fill();
+  ctx.font='100px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🚗',90,98);
+  const li=document.createElement('link');li.rel='apple-touch-icon';li.href=c.toDataURL();
+  document.head.appendChild(li);
+})();
+</script>
 </body>
 </html>
