@@ -825,9 +825,12 @@ async function syncNaarGitHub(stil=false){
       // 404 = bestand bestaat nog niet, dat is prima — sha blijft null
     }catch(e){ /* netwerk tijdelijk weg, probeer toch te schrijven */ }
 
-    // Codeer data als base64
+    // Codeer data als base64 (robuust voor UTF-8, werkt in Safari iOS)
     const json=JSON.stringify(ritten,null,2);
-    const b64=btoa(unescape(encodeURIComponent(json)));
+    const bytes=new TextEncoder().encode(json);
+    let binary='';
+    bytes.forEach(b=>binary+=String.fromCharCode(b));
+    const b64=btoa(binary);
     const nu=new Date().toLocaleString('nl-NL',{timeZone:'Europe/Amsterdam'});
     const body={
       message:`🚗 Ritten gesynchroniseerd ${nu}`,
@@ -875,12 +878,24 @@ async function laadVanGitHub(){
     const res=await fetch(api,{headers:hdrs});
     if(!res.ok){
       if(res.status===404){status.textContent='Nog geen backup gevonden op GitHub';return;}
+      if(res.status===401){status.textContent='❌ Token ongeldig — controleer instellingen';return;}
       status.textContent='❌ Fout: '+res.status;return;
     }
     const d=await res.json();
-    const json=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
+    // Robuuste base64 decode die werkt in Safari iOS
+    const b64=d.content.replace(/\s/g,'');
+    let json;
+    try{
+      // Methode 1: TextDecoder (modern, werkt met UTF-8)
+      const bytes=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+      json=new TextDecoder('utf-8').decode(bytes);
+    }catch(e){
+      // Methode 2: fallback
+      json=atob(b64);
+    }
     const geladen=JSON.parse(json);
     if(!Array.isArray(geladen)){status.textContent='❌ Ongeldige data op GitHub';return;}
+    if(geladen.length===0){status.textContent='⚠️ Backup op GitHub is leeg — niets te herstellen';return;}
     // Samenvoegen: bewaar lokale ritten die niet in GitHub staan
     const ghIds=new Set(geladen.map(r=>r.id));
     const alleenLokaal=ritten.filter(r=>!ghIds.has(r.id));
@@ -888,11 +903,11 @@ async function laadVanGitHub(){
     localStorage.setItem('ritten',JSON.stringify(ritten));
     renderLijst();updateStats();
     const ts=new Date().toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
-    status.textContent=`✓ ${ritten.length} ritten geladen om ${ts}`;
+    status.textContent=`✓ ${ritten.length} ritten hersteld om ${ts}`;
     toast(`${ritten.length} ritten hersteld van GitHub ✓`);
   }catch(e){
     status.textContent='❌ Fout: '+e.message;
-    toast('Laden mislukt');
+    toast('Laden mislukt: '+e.message);
   }
 }
 
